@@ -1,0 +1,4 @@
+ridimensionare tute le immagini a 2504x1878
+	Rapporto 4:3 con il numero di pixel uguale a quello medio
+
+Machine learning

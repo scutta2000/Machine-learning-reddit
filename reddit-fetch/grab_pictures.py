@@ -4,8 +4,7 @@ import re
 import os
 import colorama
 import argparse
-from fake_useragent import UserAgent
-w  # !/usr/bin/python3
+from fake_useragent import UserAgent  # !/usr/bin/python3
 
 
 def get_valid_filename(s):
@@ -21,7 +20,7 @@ def erase_previous_line():
     sys.stdout.write("\033[K")
 
 
-def get_pictures_from_subreddit(data, subreddit, location, nsfw):
+def get_pictures_from_subreddit(data, subreddit, location, nsfw, imageCount):
     for i in range(len(data)):
         if data[i]['data']['over_18']:
             # if nsfw post and you only want sfw
@@ -33,6 +32,10 @@ def get_pictures_from_subreddit(data, subreddit, location, nsfw):
                 continue
 
         current_post = data[i]['data']
+
+        if current_post["is_video"]:
+            continue
+
         image_url = current_post['url']
         if '.png' in image_url:
             extension = '.png'
@@ -51,12 +54,17 @@ def get_pictures_from_subreddit(data, subreddit, location, nsfw):
         # redirects = False prevents thumbnails denoting removed images from getting in
         image = requests.get(image_url, allow_redirects=False)
         if(image.status_code == 200):
-            try:
-                output_filehandle = open(
-                    location + '/' + get_valid_filename(current_post['title']) + extension, mode='bx')
+            fileDest = location + '/' + \
+                f'{imageCount:03}' + "_" + \
+                get_valid_filename(current_post['title']) + extension
+            with open(fileDest, mode='bx') as output_filehandle:
                 output_filehandle.write(image.content)
-            except:
-                pass
+            print("saving " + fileDest)
+            with open(location + '/' + "scores.csv", "a") as f:
+                f.write(str(current_post['score'])+",\n")
+
+            imageCount += 1
+    return imageCount
 
 
 def main():
@@ -79,21 +87,22 @@ def main():
     args = parser.parse_args()
     global after
     after = ''
-    for i in range(0, args.number // 100):
+    imageCount = 0
+    for i in range(args.number // 100):
         for j in range(len(args.subreddit)):
-            print('starting download ' + str(i + 1))
             print('Connecting to r/' + args.subreddit[j])
             url = 'https://www.reddit.com/r/' + args.subreddit[j] + '/top/.json?sort=top&t=' + \
                 args.top + '&limit=' + str(args.number)
+            print(url)
             if after != '':
                 url = url + '&after=' + after
             response = requests.get(url, headers={'User-agent': ua.random})
             after = response.json()['data']['after']
-            if os.path.exists(args.location):
+            if os.path.exists(args.location) or args.location == "":
                 location = os.path.join(args.location, args.subreddit[j])
             else:
                 print(
-                    'Given path does not exist, try without the location parameter to default to the current directory')
+                    'Given path ('+args.location+')does not exist, try without the location parameter to default to the current directory')
                 exit()
 
             if not response.ok:
@@ -107,8 +116,8 @@ def main():
             erase_previous_line()
             print('downloading pictures from r/' + args.subreddit[j] + '..')
             data = response.json()['data']['children']
-            get_pictures_from_subreddit(
-                data, args.subreddit[j], location, args.nsfw)
+            imageCount = get_pictures_from_subreddit(
+                data, args.subreddit[j], location, args.nsfw, imageCount)
             erase_previous_line()
             print('Downloaded pictures from r/' + args.subreddit[j])
 
