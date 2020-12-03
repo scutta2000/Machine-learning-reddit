@@ -33,7 +33,8 @@ def get_pictures_from_subreddit(data, subreddit, location, nsfw, imageCount):
 
         current_post = data[i]['data']
 
-        if current_post["is_video"]:
+        # for some reasons it downloads this despite being a gif, TODO: find root cause
+        if current_post['title'] == " Lowland gorilla at Miami zoo uses sign language to tell someone that he's not allowed to be fed by visitors.":
             continue
 
         image_url = current_post['url']
