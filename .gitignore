@@ -2,3 +2,5 @@ ml-venv/
 .vscode/
 aww/
 resized_aww/*
+scores.csv
+images.pkl

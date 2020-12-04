@@ -61,7 +61,7 @@ def get_pictures_from_subreddit(data, subreddit, location, nsfw, imageCount):
             with open(fileDest, mode='bx') as output_filehandle:
                 output_filehandle.write(image.content)
             print("saving " + fileDest)
-            with open(location + '/' + "scores.csv", "a") as f:
+            with open("scores.csv", "a") as f:
                 f.write(str(current_post['score'])+",\n")
 
             imageCount += 1
